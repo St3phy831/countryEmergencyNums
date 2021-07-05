@@ -8,10 +8,41 @@
 # Documentation for EmergencyAPI: https://github.com/BalestraPatrick/EmergencyAPI
 
 import sys
+import requests, json
+from choices import codes, choices
+from PySide6.QtCore import Slot, Qt
 from PySide6.QtWidgets import (QApplication, QLabel, QWidget, QPushButton, QLineEdit,
                                QVBoxLayout, QComboBox)
-from PySide6.QtCore import Slot, Qt
-from choices import codes, choices
+
+def get_emergency_num(country_text, emergency_text):
+    # Since Cyprus and Northern Cyprus have same code, it ouputs Cyprus' emergency
+    # numbers instead of Northern Cyprus, so I added if statements to output correct
+    #  info for Northern Cyprus.
+    
+    if country_text == "Northern Cyprus":
+        if emergency_text == "Fire":
+            return 199
+        elif emergency_text == "Police":
+            return 115
+        else:
+            return 112
+
+    code = codes[country_text]
+    endpoint = 'http://emergency-phone-numbers.herokuapp.com/country/' + code
+
+    try:
+        r = requests.get(endpoint)
+        data = r.json()
+    except:
+        print('please try again\n\n')
+
+    if data:
+        # Since the API returns a dictionary type object for a specific country, I use
+        # the data object and key of either "fire", "police", or "medical" to access
+        # and return the phone number. 
+        return data[emergency_text.lower()]
+    else:
+        print('no data\n\n')
 
 class MyWindow(QWidget):
     def __init__(self):
@@ -51,9 +82,8 @@ class MyWindow(QWidget):
     def update_ui(self):
         country_text = self.countries.currentText()
         emergency_text = self.emergency_type.currentText()
-        # For now, it's 911 until I make a function with the logic to retrieve the
-        # country's specific emergency phone number through an endpoint.
-        self.my_label.setText(f'{country_text}\'s {emergency_text} Phone Number:\n\n911')
+        emergency_num = get_emergency_num(country_text, emergency_text)
+        self.my_label.setText(f'{country_text}\'s {emergency_text} Phone Number:\n\n{emergency_num}')
 
 
 app = QApplication([])
