@@ -15,10 +15,12 @@ from PySide6.QtWidgets import (QApplication, QLabel, QWidget, QPushButton, QLine
                                QVBoxLayout, QComboBox)
 
 def get_emergency_num(country_text, emergency_text):
+    """
+    Returns a country's specific type of emergency number.
+    """
     # Since Cyprus and Northern Cyprus have same code, it ouputs Cyprus' emergency
     # numbers instead of Northern Cyprus, so I added if statements to output correct
     #  info for Northern Cyprus.
-    
     if country_text == "Northern Cyprus":
         if emergency_text == "Fire":
             return 199
@@ -31,6 +33,7 @@ def get_emergency_num(country_text, emergency_text):
     endpoint = 'http://emergency-phone-numbers.herokuapp.com/country/' + code
 
     try:
+        # Get request
         r = requests.get(endpoint)
         data = r.json()
     except:
@@ -61,25 +64,32 @@ class MyWindow(QWidget):
         self.my_btn = QPushButton("Enter")
         self.my_btn.clicked.connect(self.update_ui)
 
+        # Instantiates popup list of coutries
         self.countries = QComboBox()
         self.countries.addItems(self.country_list)
 
+        # Instantiates popup list of types of emergency numbers
         self.emergency_type = QComboBox()
         self.emergency_type.addItems(self.emergency_list)
 
         self.my_label = QLabel("")
 
         vbox = QVBoxLayout()
+        # Adds elements to vertical layout
         vbox.addWidget(self.title)
         vbox.addWidget(self.countries)
         vbox.addWidget(self.emergency_type)
         vbox.addWidget(self.my_btn)
         vbox.addWidget(self.my_label)
 
+        # Sets up a vertical layout
         self.setLayout(vbox)
 
     @Slot()
     def update_ui(self):
+        """
+        Displays a country's specific type of emergency number.
+        """
         country_text = self.countries.currentText()
         emergency_text = self.emergency_type.currentText()
         emergency_num = get_emergency_num(country_text, emergency_text)
@@ -87,6 +97,9 @@ class MyWindow(QWidget):
 
 
 app = QApplication([])
+# create an instance of MyWindow
 my_win = MyWindow()
 my_win.show()
+# app.exec_() runs the main loop
+# putting it in sys.exit() allows for a graceful exit
 sys.exit(app.exec())
